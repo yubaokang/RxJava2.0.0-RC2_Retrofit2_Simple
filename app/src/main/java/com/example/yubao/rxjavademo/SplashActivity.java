@@ -41,7 +41,6 @@ public class SplashActivity extends AppCompatActivity {
                 .subscribe(resourceSubscriber);
     }
 
-
     @Override
     protected void onDestroy() {
         super.onDestroy();

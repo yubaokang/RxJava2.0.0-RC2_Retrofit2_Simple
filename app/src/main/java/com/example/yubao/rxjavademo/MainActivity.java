@@ -8,6 +8,7 @@ import android.view.View;
 import com.example.yubao.rxjavademo.http.RetrofitModule;
 import com.example.yubao.rxjavademo.model.response.WeiXinDataListRes;
 import com.example.yubao.rxjavademo.rxjava.RetrofitTransformer;
+import com.example.yubao.rxjavademo.rxjava.ThreadTransformer;
 import com.gj.base.lib.utils.L;
 import com.gj.base.lib.utils.T;
 
@@ -26,6 +27,7 @@ import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
@@ -99,8 +101,7 @@ public class MainActivity extends AppCompatActivity {
                         e.onComplete();
                     }
                 }, FlowableEmitter.BackpressureMode.DROP)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
+                .compose(ThreadTransformer.<String>applySchedulers())
                 .filter(new Predicate<String>() {
                     @Override
                     public boolean test(String s) throws Exception {
@@ -119,6 +120,36 @@ public class MainActivity extends AppCompatActivity {
                         L.i("test1--t>--" + SystemClock.currentThreadTimeMillis() + "--" + s);
                     }
                 });
+        Flowable
+                .zip(Flowable.just("11"), Flowable.just("212"), new BiFunction<String, String, String>() {
+                    @Override
+                    public String apply(String s, String s2) throws Exception {
+                        return s + s2;
+                    }
+                })
+                .compose(ThreadTransformer.<String>applySchedulers())
+                .filter(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) throws Exception {
+                        return false;
+                    }
+                })
+                .subscribe(new ResourceSubscriber<String>() {
+                    @Override
+                    public void onNext(String s) {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 
     Disposable test2_Disposable;
@@ -126,21 +157,20 @@ public class MainActivity extends AppCompatActivity {
 
     public void test2() {
         //count down by Observable
-//        test2_Disposable = Observable.interval(1, TimeUnit.SECONDS)
-//                .take(60)
-//                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(new Consumer<Long>() {
-//                    @Override
-//                    public void accept(Long aLong) throws Exception {
-//                        L.i("test2_Observable--" + aLong);
-//                    }
-//                });
-        //count down by Flowable
-        test2_Disposable2 = Flowable.interval(1, TimeUnit.SECONDS)
+        test2_Disposable = Observable.interval(1, TimeUnit.SECONDS)
                 .take(60)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Long>() {
+                    @Override
+                    public void accept(Long aLong) throws Exception {
+                        L.i("test2_Observable--" + aLong);
+                    }
+                });
+        //count down by Flowable
+        test2_Disposable2 = Flowable.interval(1, TimeUnit.SECONDS)
+                .take(60)
+                .compose(ThreadTransformer.<Long>applySchedulers())
                 .subscribe(new Consumer<Long>() {
                     @Override
                     public void accept(Long aLong) throws Exception {
@@ -180,8 +210,7 @@ public class MainActivity extends AppCompatActivity {
                         e.onComplete();
                     }
                 }, FlowableEmitter.BackpressureMode.DROP)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
+                .compose(ThreadTransformer.<String>applySchedulers())
                 .subscribe(resourceSubscriber);
     }
 
@@ -212,8 +241,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         RetrofitModule.getService().getWeiXin("1")
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
+                .compose(ThreadTransformer.<WeiXinDataListRes>applySchedulers())
                 .compose(RetrofitTransformer.<WeiXinDataListRes>applySchedulers())
                 .subscribe(retrofit2);
     }
