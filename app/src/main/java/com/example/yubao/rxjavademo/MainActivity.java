@@ -9,6 +9,7 @@ import com.example.yubao.rxjavademo.http.RetrofitModule;
 import com.example.yubao.rxjavademo.model.response.WeiXinDataListRes;
 import com.example.yubao.rxjavademo.rxjava.RetrofitTransformer;
 import com.example.yubao.rxjavademo.rxjava.ThreadTransformer;
+import com.example.yubao.rxjavademo.utils.SubscriberDispose;
 import com.gj.base.lib.utils.L;
 import com.gj.base.lib.utils.T;
 
@@ -77,12 +78,12 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .subscribe(new Consumer<String>() {
-
                     @Override
                     public void accept(String s) throws Exception {
                         L.i("----------->>>>>---" + SystemClock.currentThreadTimeMillis() + "--" + s);
                     }
                 });
+
         //Flowable
         Flowable
                 .create(new FlowableOnSubscribe<String>() {
@@ -120,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
                         L.i("test1--t>--" + SystemClock.currentThreadTimeMillis() + "--" + s);
                     }
                 });
+
         Flowable
                 .zip(Flowable.just("11"), Flowable.just("212"), new BiFunction<String, String, String>() {
                     @Override
@@ -137,17 +139,14 @@ public class MainActivity extends AppCompatActivity {
                 .subscribe(new ResourceSubscriber<String>() {
                     @Override
                     public void onNext(String s) {
-
                     }
 
                     @Override
                     public void onError(Throwable t) {
-
                     }
 
                     @Override
                     public void onComplete() {
-
                     }
                 });
     }
@@ -249,15 +248,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (resourceSubscriber != null) {
-            resourceSubscriber.dispose();
-        }
-        if (test2_Disposable2 != null) {
-            test2_Disposable2.dispose();
-        }
-        if (retrofit2 != null) {
-            retrofit2.dispose();
-        }
+        SubscriberDispose.subscriberDispose
+                .dispose(resourceSubscriber)
+                .dispose(test2_Disposable2)
+                .dispose(retrofit2);
     }
 
     @OnClick({R.id.btn1, R.id.btn2, R.id.btn3, R.id.btn4, R.id.btn5, R.id.btn6, R.id.btn7, R.id.btn8, R.id.btn9, R.id.btn10})
