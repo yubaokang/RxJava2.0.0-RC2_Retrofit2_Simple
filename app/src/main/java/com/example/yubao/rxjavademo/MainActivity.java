@@ -128,6 +128,8 @@ public class MainActivity extends AppCompatActivity {
         //count down by Observable
 //        test2_Disposable = Observable.interval(1, TimeUnit.SECONDS)
 //                .take(60)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
 //                .subscribe(new Consumer<Long>() {
 //                    @Override
 //                    public void accept(Long aLong) throws Exception {
@@ -137,6 +139,8 @@ public class MainActivity extends AppCompatActivity {
         //count down by Flowable
         test2_Disposable2 = Flowable.interval(1, TimeUnit.SECONDS)
                 .take(60)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<Long>() {
                     @Override
                     public void accept(Long aLong) throws Exception {
