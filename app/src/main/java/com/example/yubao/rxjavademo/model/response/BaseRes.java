@@ -3,7 +3,6 @@ package com.example.yubao.rxjavademo.model.response;
 /**
  * Created by yubaokang on 2016/9/13.
  */
-
 public class BaseRes<T> {
     private String msg;
     private String returnCode;

@@ -1,8 +1,11 @@
 package com.example.yubao.rxjavademo.rxjava;
 
+import com.example.yubao.rxjavademo.http.ReturnCode;
 import com.example.yubao.rxjavademo.model.response.BaseRes;
 
 import org.reactivestreams.Publisher;
+
+import java.util.List;
 
 import io.reactivex.Flowable;
 import io.reactivex.FlowableTransformer;
@@ -49,18 +52,19 @@ public class Transformer {
     public static <T> FlowableTransformer<BaseRes<T>, T> retrofit() {
         return new FlowableTransformer<BaseRes<T>, T>() {
             @Override
-            public Publisher<? extends T> apply(Flowable<BaseRes<T>> baseResFlowable) throws Exception {
-                return baseResFlowable
+            public Publisher<? extends T> apply(Flowable<BaseRes<T>> flowable) throws Exception {
+                return flowable
                         .flatMap(new Function<BaseRes<T>, Publisher<T>>() {
                             @Override
                             public Publisher<T> apply(BaseRes<T> t) throws Exception {
-                                if (t == null) {
-                                    return Flowable.error(new NullPointerException("response model is null"));
+                                if (t == null || (t instanceof List && ((List) t).size() == 0)) {
+                                    return Flowable.error(new ResponseNullException("response's model is null or response's List size is 0"));
                                 } else {
-                                    if ("0000".equals(t.getReturnCode())) {//如果返回时"0000"表示数据请求正常
+                                    if (ReturnCode._0000.equals(t.getReturnCode())) {//如果返回时"0000"表示数据请求正常
                                         return Flowable.just(t.getData());
                                     } else {
-                                        return Flowable.error(new ServerException("服务器异常"));
+                                        //如果网络未连接不会调用flatMap,所以网络未连接不会出现ServerException错误
+                                        return Flowable.error(new ServerException(t.getReturnCode()));//return the response's returnCode
                                     }
                                 }
                             }

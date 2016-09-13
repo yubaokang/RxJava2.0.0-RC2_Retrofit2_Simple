@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import com.example.yubao.rxjavademo.http.RetrofitModule;
+import com.example.yubao.rxjavademo.http.ReturnCode;
 import com.example.yubao.rxjavademo.model.response.WheelDataList;
 import com.example.yubao.rxjavademo.rxjava.RSubscriber;
 import com.example.yubao.rxjavademo.rxjava.Transformer;
@@ -155,25 +156,8 @@ public class MainActivity extends AppCompatActivity {
     private ResourceSubscriber<String> resourceSubscriber;
 
     public void test3() {
-        resourceSubscriber = new ResourceSubscriber<String>() {
-            @Override
-            public void onNext(String s) {
-                L.i("rx_call__subscribe__" + Thread.currentThread().getName());
-                L.i("-----test3> onNext-" + s);
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                L.i("-----test3> onError");
-            }
-
-            @Override
-            public void onComplete() {
-                L.i("-----test3> onComplete");
-            }
-        };
-        Flowable
-                .create(new FlowableOnSubscribe<String>() {
+        resourceSubscriber = Flowable.
+                create(new FlowableOnSubscribe<String>() {
                     @Override
                     public void subscribe(FlowableEmitter<String> e) throws Exception {
                         L.i("rx_call__create__" + Thread.currentThread().getName());
@@ -185,7 +169,29 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }, FlowableEmitter.BackpressureMode.DROP)
                 .compose(Transformer.<String>ioMain())
-                .subscribe(resourceSubscriber);
+                .doOnNext(new Consumer<String>() {
+                    @Override
+                    public void accept(String s) throws Exception {
+
+                    }
+                })
+                .subscribeWith(new ResourceSubscriber<String>() {
+                    @Override
+                    public void onNext(String s) {
+                        L.i("rx_call__subscribe__" + Thread.currentThread().getName());
+                        L.i("-----test3> onNext-" + s);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        L.i("-----test3> onError");
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        L.i("-----test3> onComplete");
+                    }
+                });
     }
 
     private ResourceSubscriber<List<WheelDataList>> retrofit2;
@@ -194,31 +200,45 @@ public class MainActivity extends AppCompatActivity {
      * Retrofit2 & how to use compose(FlowableTransformer r)
      */
     public void test_Retrofit2() {
-        retrofit2 = new RSubscriber<List<WheelDataList>>() {
-            @Override
-            public void _onNext(List<WheelDataList> o) {
-                L.i("rx_call__subscribe__" + Thread.currentThread().getName());
-                L.i("---->test_Retrofit2--onNext--" + o.toString());
-            }
-
-            @Override
-            public void _onEmpty() {
-                L.i("---->test_Retrofit2--_onEmpty--");
-            }
-
-            @Override
-            public void _onNetWorkError() {
-                L.i("---->test_Retrofit2--_onNetWorkError--");
-            }
-
-            @Override
-            public void _onComplete() {
-                L.i("---->test_Retrofit2--onComplete--");
-            }
-        };
-        RetrofitModule.getService().getWheelList("1")
+        retrofit2 = RetrofitModule.getService().getWheelList("1")
                 .compose(Transformer.<List<WheelDataList>>retrofit())
-                .subscribe(retrofit2);
+                .doOnNext(new Consumer<List<WheelDataList>>() {
+                    @Override
+                    public void accept(List<WheelDataList> wheelDataLists) throws Exception {
+                        L.i("rx_call__doOnNext__" + Thread.currentThread().getName());
+                    }
+                })
+                .subscribeWith(new RSubscriber<List<WheelDataList>>(this) {
+                    @Override
+                    public void _onNext(List<WheelDataList> o) {
+                        L.i("rx_call__subscribe__" + Thread.currentThread().getName());
+                        L.i("---->test_Retrofit2--onNext--" + o.toString());
+                    }
+
+                    @Override
+                    public void _onEmpty() {
+                        L.i("---->test_Retrofit2--_onEmpty--");
+                    }
+
+                    @Override
+                    public void _onNetWorkError() {
+                        L.i("---->test_Retrofit2--_onNetWorkError--");
+                    }
+
+                    @Override
+                    public void _onServerError(String returnCode) {
+                        switch (returnCode) {
+                            case ReturnCode._1000:
+                                L.i("_onServerError" + "1000");
+                                break;
+                        }
+                    }
+
+                    @Override
+                    public void _onComplete() {
+                        L.i("---->test_Retrofit2--onComplete--");
+                    }
+                });
     }
 
     public void test_zip() {
