@@ -1,11 +1,10 @@
-package com.example.yubao.rxjavademo.utils;
+package com.example.yubao.rxjavademo.rxjava;
 
 import io.reactivex.disposables.Disposable;
 
 /**
  * Created by yubao on 2016/9/12.
  */
-
 public class SubscriberDispose {
 
     public static Builder builder() {

@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Flowable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subscribers.ResourceSubscriber;
 
 public class SplashActivity extends AppCompatActivity {
@@ -36,7 +35,7 @@ public class SplashActivity extends AppCompatActivity {
             }
         };
         Flowable.timer(2, TimeUnit.SECONDS)
-                .subscribeOn(Schedulers.io())
+//                .subscribeOn(Schedulers.computation())//timer default thread
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(resourceSubscriber);
     }

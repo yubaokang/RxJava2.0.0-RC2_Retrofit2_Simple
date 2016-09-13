@@ -1,10 +1,14 @@
 package com.example.yubao.rxjavademo.http;
 
 
+import com.example.yubao.rxjavademo.model.response.BaseRes;
 import com.example.yubao.rxjavademo.model.response.LoginData;
 import com.example.yubao.rxjavademo.model.response.NewsDataRes;
 import com.example.yubao.rxjavademo.model.response.WeatherDataRes;
 import com.example.yubao.rxjavademo.model.response.WeiXinDataListRes;
+import com.example.yubao.rxjavademo.model.response.WheelDataList;
+
+import java.util.List;
 
 import io.reactivex.Flowable;
 import retrofit2.http.Field;
@@ -61,4 +65,15 @@ public interface IRetrofitRequest {
     @FormUrlEncoded
     @POST("http://nphoneapi.goujiawang.com/NAUserInfoWebsiteJson/login.html")
     Flowable<LoginData> login(@Field("userName") String userName, @Field("password") String password);
+
+    /**
+     * 轮播页
+     *
+     * @param type 1，首页轮播；2，创意轮播
+     * @return
+     */
+    @FormUrlEncoded
+    @POST("http://phoneapi.goujiawang.com/NACustomerReservationJson/getRecommendImageList.html")
+    Flowable<BaseRes<List<WheelDataList>>> getWheelList(@Field("type") String type);
+
 }

@@ -6,15 +6,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import com.example.yubao.rxjavademo.http.RetrofitModule;
-import com.example.yubao.rxjavademo.model.response.WeiXinDataListRes;
-import com.example.yubao.rxjavademo.rxjava.RetrofitTransformer;
-import com.example.yubao.rxjavademo.rxjava.ThreadTransformer;
+import com.example.yubao.rxjavademo.model.response.WheelDataList;
+import com.example.yubao.rxjavademo.rxjava.RSubscriber;
+import com.example.yubao.rxjavademo.rxjava.Transformer;
 import com.example.yubao.rxjavademo.utils.SubscriberDispose;
 import com.gj.base.lib.utils.L;
 import com.gj.base.lib.utils.T;
 
 import org.reactivestreams.Publisher;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.ButterKnife;
@@ -22,17 +23,12 @@ import butterknife.OnClick;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableEmitter;
 import io.reactivex.FlowableOnSubscribe;
-import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
-import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subscribers.ResourceSubscriber;
 
 public class MainActivity extends AppCompatActivity {
@@ -46,49 +42,50 @@ public class MainActivity extends AppCompatActivity {
 
     public void test1() {
         //Observable
-        Observable
-                .create(new ObservableOnSubscribe<String>() {
-                    @Override
-                    public void subscribe(ObservableEmitter<String> e) throws Exception {
-                        e.onNext("aaa");
-                        e.onNext("bAbb");
-                        e.onNext("ccc");
-                        e.onNext("ddAd");
-                        e.onNext("ddd");
-                        e.onNext("ddad");
-                        e.onNext("ddAd");
-                        e.onNext("ddAAAAd");
-                        e.onNext("ddAaad");
-                        e.onNext("ddAd");
-                        e.onComplete();
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .filter(new Predicate<String>() {
-                    @Override
-                    public boolean test(String s) throws Exception {
-                        return s.contains("a");
-                    }
-                })
-                .flatMap(new Function<String, ObservableSource<String>>() {
-                    @Override
-                    public ObservableSource<String> apply(String s) throws Exception {
-                        return Observable.just("contains a：" + s);
-                    }
-                })
-                .subscribe(new Consumer<String>() {
-                    @Override
-                    public void accept(String s) throws Exception {
-                        L.i("----------->>>>>---" + SystemClock.currentThreadTimeMillis() + "--" + s);
-                    }
-                });
+//        Observable
+//                .create(new ObservableOnSubscribe<String>() {
+//                    @Override
+//                    public void subscribe(ObservableEmitter<String> e) throws Exception {
+//                        e.onNext("aaa");
+//                        e.onNext("bAbb");
+//                        e.onNext("ccc");
+//                        e.onNext("ddAd");
+//                        e.onNext("ddd");
+//                        e.onNext("ddad");
+//                        e.onNext("ddAd");
+//                        e.onNext("ddAAAAd");
+//                        e.onNext("ddAaad");
+//                        e.onNext("ddAd");
+//                        e.onComplete();
+//                    }
+//                })
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .filter(new Predicate<String>() {
+//                    @Override
+//                    public boolean test(String s) throws Exception {
+//                        return s.contains("a");
+//                    }
+//                })
+//                .flatMap(new Function<String, ObservableSource<String>>() {
+//                    @Override
+//                    public ObservableSource<String> apply(String s) throws Exception {
+//                        return Observable.just("contains a：" + s);
+//                    }
+//                })
+//                .subscribe(new Consumer<String>() {
+//                    @Override
+//                    public void accept(String s) throws Exception {
+//                        L.i("----------->>>>>---" + SystemClock.currentThreadTimeMillis() + "--" + s);
+//                    }
+//                });
 
         //Flowable
         Flowable
                 .create(new FlowableOnSubscribe<String>() {
                     @Override
                     public void subscribe(FlowableEmitter<String> e) throws Exception {
+                        L.i("rx_call__create__" + Thread.currentThread().getName());
                         e.onNext("aaa");
                         e.onNext("bAbb");
                         e.onNext("ccc");
@@ -102,51 +99,26 @@ public class MainActivity extends AppCompatActivity {
                         e.onComplete();
                     }
                 }, FlowableEmitter.BackpressureMode.DROP)
-                .compose(ThreadTransformer.<String>applySchedulers())
+                .compose(Transformer.<String>ioMain())
                 .filter(new Predicate<String>() {
                     @Override
                     public boolean test(String s) throws Exception {
+                        L.i("rx_call__filter__" + Thread.currentThread().getName());
                         return s.contains("a");
                     }
                 })
                 .flatMap(new Function<String, Publisher<String>>() {
                     @Override
                     public Publisher<String> apply(String s) throws Exception {
+                        L.i("rx_call__flatMap__" + Thread.currentThread().getName());
                         return Flowable.just("contains a：" + s);
                     }
                 })
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String s) throws Exception {
+                        L.i("rx_call__subscribe__" + Thread.currentThread().getName());
                         L.i("test1--t>--" + SystemClock.currentThreadTimeMillis() + "--" + s);
-                    }
-                });
-
-        Flowable
-                .zip(Flowable.just("11"), Flowable.just("212"), new BiFunction<String, String, String>() {
-                    @Override
-                    public String apply(String s, String s2) throws Exception {
-                        return s + s2;
-                    }
-                })
-                .compose(ThreadTransformer.<String>applySchedulers())
-                .filter(new Predicate<String>() {
-                    @Override
-                    public boolean test(String s) throws Exception {
-                        return false;
-                    }
-                })
-                .subscribe(new ResourceSubscriber<String>() {
-                    @Override
-                    public void onNext(String s) {
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-                    }
-
-                    @Override
-                    public void onComplete() {
                     }
                 });
     }
@@ -156,24 +128,25 @@ public class MainActivity extends AppCompatActivity {
 
     public void test2() {
         //count down by Observable
-        test2_Disposable = Observable.interval(1, TimeUnit.SECONDS)
+//        test2_Disposable = Observable.interval(1, TimeUnit.SECONDS)
+//                .take(60)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Consumer<Long>() {
+//                    @Override
+//                    public void accept(Long aLong) throws Exception {
+//                        L.i("test2_Observable--" + aLong);
+//                    }
+//                });
+        //count down by Flowable
+        test2_Disposable2 = Flowable.interval(1, TimeUnit.SECONDS)//interval default thread is Schedulers.computation()
                 .take(60)
-                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<Long>() {
                     @Override
                     public void accept(Long aLong) throws Exception {
-                        L.i("test2_Observable--" + aLong);
-                    }
-                });
-        //count down by Flowable
-        test2_Disposable2 = Flowable.interval(1, TimeUnit.SECONDS)
-                .take(60)
-                .compose(ThreadTransformer.<Long>applySchedulers())
-                .subscribe(new Consumer<Long>() {
-                    @Override
-                    public void accept(Long aLong) throws Exception {
                         L.i("test2_Flowable--" + aLong);
+                        L.i("rx_call__subscribe__" + Thread.currentThread().getName());
                         T.show(MainActivity.this, aLong + "");
                     }
                 });
@@ -185,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
         resourceSubscriber = new ResourceSubscriber<String>() {
             @Override
             public void onNext(String s) {
+                L.i("rx_call__subscribe__" + Thread.currentThread().getName());
                 L.i("-----test3> onNext-" + s);
             }
 
@@ -202,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
                 .create(new FlowableOnSubscribe<String>() {
                     @Override
                     public void subscribe(FlowableEmitter<String> e) throws Exception {
+                        L.i("rx_call__create__" + Thread.currentThread().getName());
                         e.onNext("aaaaa");
                         e.onNext("bbbbb");
                         e.onNext("ccccc");
@@ -209,46 +184,80 @@ public class MainActivity extends AppCompatActivity {
                         e.onComplete();
                     }
                 }, FlowableEmitter.BackpressureMode.DROP)
-                .compose(ThreadTransformer.<String>applySchedulers())
+                .compose(Transformer.<String>ioMain())
                 .subscribe(resourceSubscriber);
     }
 
-    private ResourceSubscriber<WeiXinDataListRes> retrofit2;
+    private ResourceSubscriber<List<WheelDataList>> retrofit2;
 
     /**
      * Retrofit2 & how to use compose(FlowableTransformer r)
      */
     public void test_Retrofit2() {
-        retrofit2 = new ResourceSubscriber<WeiXinDataListRes>() {
+        retrofit2 = new RSubscriber<List<WheelDataList>>() {
             @Override
-            public void onNext(WeiXinDataListRes weiXinDataListRes) {
-                L.i("---->test_Retrofit2--onNext--" + weiXinDataListRes.toString());
+            public void _onNext(List<WheelDataList> o) {
+                L.i("rx_call__subscribe__" + Thread.currentThread().getName());
+                L.i("---->test_Retrofit2--onNext--" + o.toString());
             }
 
             @Override
-            public void onError(Throwable t) {
-                if (t instanceof NullPointerException) {
-                    L.i("---->test_Retrofit2--Throwable--NullPointerException");
-                } else {
-                    L.i("---->test_Retrofit2--Throwable--" + t.toString());
-                }
+            public void _onEmpty() {
+                L.i("---->test_Retrofit2--_onEmpty--");
             }
 
             @Override
-            public void onComplete() {
+            public void _onNetWorkError() {
+                L.i("---->test_Retrofit2--_onNetWorkError--");
+            }
+
+            @Override
+            public void _onComplete() {
                 L.i("---->test_Retrofit2--onComplete--");
             }
         };
-        RetrofitModule.getService().getWeiXin("1")
-                .compose(ThreadTransformer.<WeiXinDataListRes>applySchedulers())
-                .compose(RetrofitTransformer.<WeiXinDataListRes>applySchedulers())
+        RetrofitModule.getService().getWheelList("1")
+                .compose(Transformer.<List<WheelDataList>>retrofit())
                 .subscribe(retrofit2);
+    }
+
+    public void test_zip() {
+        Flowable
+                .zip(Flowable.just("11"), Flowable.just("212"), new BiFunction<String, String, String>() {
+                    @Override
+                    public String apply(String s, String s2) throws Exception {
+                        L.i("rx_call__zip__" + Thread.currentThread().getName());
+                        return s + s2;
+                    }
+                })
+                .filter(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) throws Exception {
+                        L.i("rx_call__filter__" + Thread.currentThread().getName());
+                        return false;
+                    }
+                })
+                .compose(Transformer.<String>ioMain())
+                .subscribe(new ResourceSubscriber<String>() {
+                    @Override
+                    public void onNext(String s) {
+                        L.i("rx_call__subscribe__" + Thread.currentThread().getName());
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                    }
+
+                    @Override
+                    public void onComplete() {
+                    }
+                });
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        SubscriberDispose.subscriberDispose
+        SubscriberDispose.builder()
                 .dispose(resourceSubscriber)
                 .dispose(test2_Disposable2)
                 .dispose(retrofit2);
@@ -270,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
                 test_Retrofit2();
                 break;
             case R.id.btn5:
+                test_zip();
                 break;
             case R.id.btn6:
                 break;
