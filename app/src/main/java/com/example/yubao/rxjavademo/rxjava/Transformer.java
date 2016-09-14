@@ -58,13 +58,13 @@ public class Transformer {
                             @Override
                             public Publisher<T> apply(BaseRes<T> t) throws Exception {
                                 if (t == null || (t instanceof List && ((List) t).size() == 0)) {
-                                    return Flowable.error(new ResponseNullException("response's model is null or response's List size is 0"));
+                                    return Flowable.error(new ResponseNullException("response's model is null or response's list size is 0"));
                                 } else {
                                     if (ReturnCode._0000.equals(t.getReturnCode())) {//如果返回时"0000"表示数据请求正常
                                         return Flowable.just(t.getData());
                                     } else {
                                         //如果网络未连接不会调用flatMap,所以网络未连接不会出现ServerException错误
-                                        return Flowable.error(new ServerException(t.getReturnCode()));//return the response's returnCode
+                                        return Flowable.error(new ServerException(t.getReturnCode(), t.getMsg()));//return the response's returnCode and msg
                                     }
                                 }
                             }

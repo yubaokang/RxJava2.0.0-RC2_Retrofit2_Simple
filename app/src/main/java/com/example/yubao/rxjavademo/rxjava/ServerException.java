@@ -6,13 +6,20 @@ package com.example.yubao.rxjavademo.rxjava;
  */
 public class ServerException extends Exception {
 
+    private String returnCode;
+
     /**
      * Constructs a {@code ServerException} with the specified
      * detail message.
      *
      * @param returnCode the Response's returnCode.
      */
-    public ServerException(String returnCode) {
-        super(returnCode);
+    public ServerException(String returnCode, String msg) {
+        super(msg);
+        this.returnCode = returnCode;
+    }
+
+    public String getReturnCode() {
+        return returnCode;
     }
 }

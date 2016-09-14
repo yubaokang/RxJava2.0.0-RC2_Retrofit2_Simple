@@ -4,9 +4,9 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.TextView;
 
 import com.example.yubao.rxjavademo.http.RetrofitModule;
-import com.example.yubao.rxjavademo.http.ReturnCode;
 import com.example.yubao.rxjavademo.model.response.WheelDataList;
 import com.example.yubao.rxjavademo.rxjava.RSubscriber;
 import com.example.yubao.rxjavademo.rxjava.Transformer;
@@ -19,6 +19,7 @@ import org.reactivestreams.Publisher;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.reactivex.Flowable;
@@ -33,6 +34,8 @@ import io.reactivex.functions.Predicate;
 import io.reactivex.subscribers.ResourceSubscriber;
 
 public class MainActivity extends AppCompatActivity {
+    @BindView(R.id.tv_show)
+    TextView tv_show;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,9 +123,11 @@ public class MainActivity extends AppCompatActivity {
                     public void accept(String s) throws Exception {
                         L.i("rx_call__subscribe__" + Thread.currentThread().getName());
                         L.i("test1--t>--" + SystemClock.currentThreadTimeMillis() + "--" + s);
+                        showText(s);
                     }
                 });
     }
+
 
     Disposable test2_Disposable;
     Disposable test2_Disposable2;
@@ -149,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
                         L.i("test2_Flowable--" + aLong);
                         L.i("rx_call__subscribe__" + Thread.currentThread().getName());
                         T.show(MainActivity.this, aLong + "");
+                        showText(aLong + "");
                     }
                 });
     }
@@ -180,6 +186,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onNext(String s) {
                         L.i("rx_call__subscribe__" + Thread.currentThread().getName());
                         L.i("-----test3> onNext-" + s);
+                        showText(s);
                     }
 
                     @Override
@@ -213,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
                     public void _onNext(List<WheelDataList> o) {
                         L.i("rx_call__subscribe__" + Thread.currentThread().getName());
                         L.i("---->test_Retrofit2--onNext--" + o.toString());
+                        showText("返回List数组 size=" + o.size());
                     }
 
                     @Override
@@ -226,12 +234,8 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void _onServerError(String returnCode) {
-                        switch (returnCode) {
-                            case ReturnCode._1000:
-                                L.i("_onServerError" + "1000");
-                                break;
-                        }
+                    public void _onServerError(String returnCode, String msg) {
+                        L.i("_onServerError" + returnCode + ":" + msg);
                     }
 
                     @Override
@@ -254,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean test(String s) throws Exception {
                         L.i("rx_call__filter__" + Thread.currentThread().getName());
-                        return false;
+                        return s.contains("12");
                     }
                 })
                 .compose(Transformer.<String>ioMain())
@@ -262,6 +266,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onNext(String s) {
                         L.i("rx_call__subscribe__" + Thread.currentThread().getName());
+                        showText(s);
                     }
 
                     @Override
@@ -285,6 +290,7 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick({R.id.btn1, R.id.btn2, R.id.btn3, R.id.btn4, R.id.btn5, R.id.btn6, R.id.btn7, R.id.btn8, R.id.btn9, R.id.btn10})
     public void onClick(View view) {
+        clean();
         switch (view.getId()) {
             case R.id.btn1:
                 test1();
@@ -314,5 +320,17 @@ public class MainActivity extends AppCompatActivity {
             default:
                 break;
         }
+    }
+
+    private StringBuffer old = new StringBuffer();
+
+    public void showText(String add) {
+        old.append("\n").append(add);
+        tv_show.setText(old.toString());
+    }
+
+    public void clean() {
+        old = new StringBuffer();
+        tv_show.setText(old.toString());
     }
 }

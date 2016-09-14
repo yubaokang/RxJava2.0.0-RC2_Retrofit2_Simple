@@ -34,7 +34,7 @@ public abstract class RSubscriber<T> extends ResourceSubscriber<T> {
             if (t instanceof ResponseNullException) {
                 _onEmpty();
             } else if (t instanceof ServerException) {
-                _onServerError(t.getMessage());
+                _onServerError(((ServerException) t).getReturnCode(), t.getMessage());
             } else {
                 _onNetWorkError();//UnknownHostException 1：服务器地址错误；2：网络未连接
             }
@@ -52,7 +52,7 @@ public abstract class RSubscriber<T> extends ResourceSubscriber<T> {
 
     public abstract void _onNetWorkError();//网络未连接
 
-    public abstract void _onServerError(String returnCode);//接口调用操作出现异常，比如注册失败（已注册,短信验证码出错,and so on）
+    public abstract void _onServerError(String returnCode, String msg);//接口调用操作出现异常，比如注册失败（已注册,短信验证码出错,and so on）
 
     public abstract void _onComplete();//onComplete()
 
