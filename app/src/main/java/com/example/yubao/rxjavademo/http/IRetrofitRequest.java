@@ -76,4 +76,5 @@ public interface IRetrofitRequest {
     @POST("http://phoneapi.goujiawang.com/NACustomerReservationJson/getRecommendImageList.html")
     Flowable<BaseRes<List<WheelDataList>>> getWheelList(@Field("type") String type);
 
+
 }

@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
 
+import com.example.yubao.rxjavademo.http.ProgressResponseBody;
 import com.example.yubao.rxjavademo.http.RetrofitModule;
 import com.example.yubao.rxjavademo.model.response.WheelDataList;
 import com.example.yubao.rxjavademo.rxjava.RSubscriber;
@@ -31,7 +32,9 @@ import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
+import io.reactivex.subscribers.DefaultSubscriber;
 import io.reactivex.subscribers.ResourceSubscriber;
+import okhttp3.ResponseBody;
 
 public class MainActivity extends AppCompatActivity {
     @BindView(R.id.tv_show)
@@ -279,6 +282,34 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    public void test_downLoadApk() {
+        RetrofitModule
+                .getDownload(new ProgressResponseBody.ProgressListener() {
+                    @Override
+                    public void update(long bytesRead, long contentLength, boolean done) {
+                        L.i("-------下载进度-->" + bytesRead + "/" + contentLength + "/" + done);
+                        showText("-------下载进度-->" + bytesRead + "/" + contentLength + "/" + done);
+                    }
+                })
+                .downLoadApk()
+                .compose(Transformer.<ResponseBody>ioMain())
+                .subscribeWith(new DefaultSubscriber<ResponseBody>() {
+                    @Override
+                    public void onNext(ResponseBody responseBody) {
+                        T.show(MainActivity.this, "下载完成" + responseBody.contentLength());
+                        L.i("--------------->下载完成" + responseBody.contentLength());
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                    }
+
+                    @Override
+                    public void onComplete() {
+                    }
+                });
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -308,6 +339,7 @@ public class MainActivity extends AppCompatActivity {
                 test_zip();
                 break;
             case R.id.btn6:
+                test_downLoadApk();
                 break;
             case R.id.btn7:
                 break;

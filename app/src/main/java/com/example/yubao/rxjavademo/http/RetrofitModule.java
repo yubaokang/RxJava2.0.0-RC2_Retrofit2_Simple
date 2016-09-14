@@ -1,6 +1,5 @@
 package com.example.yubao.rxjavademo.http;
 
-import com.gj.base.lib.utils.L;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
 import java.io.IOException;
@@ -19,8 +18,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 public class RetrofitModule {
 
-    private static IRetrofitRequest request;
+    private static IRetrofitRequest request;//一般网络请求 get/post/...
 
+    /**
+     * @return 一般网络请求 get/post/...
+     */
     public static IRetrofitRequest getService() {
         if (request == null) {
             //拦截器
@@ -45,34 +47,68 @@ public class RetrofitModule {
                     .connectTimeout(15, TimeUnit.SECONDS)//设置请求超时时间
                     .retryOnConnectionFailure(true)//设置出现错误进行重新连接。
                     .build();
-
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(UrlConst.URL)
                     .addConverterFactory(GsonConverterFactory.create())
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .client(httpClient)
                     .build();
-            L.i("------------>getService()");
             request = retrofit.create(IRetrofitRequest.class);
         }
         return request;
     }
 
-//    public <T> Subscription execute(rx.Observable<Result<T>> observable, CallBack<T> subscriber) {
-//        return observable.subscribeOn(Schedulers.io())
-//                .unsubscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .flatMap(new Func1<Result<T>, Observable<T>>() {
-//
-//                    public Observable<T> call(Result<T> t) {
-//                        Result result = (Result) t;
-//                        if (result.getStatus() == 0) {
-//                            return Observable.error(new ServerException(result.getMsg()));
-//                        }
-//                        return Observable.just((T) result.getData());
-//                    }
-//                })
-//                .subscribe(subscriber);
-//    }
+    /**
+     * @return 下载文件
+     */
+    public static IRetrofitDownload getDownload(final ProgressResponseBody.ProgressListener progressListener) {
+        //打印拦截器
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+                .addInterceptor(new Interceptor() {
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        Response originalResponse = chain.proceed(chain.request());
+                        return originalResponse.newBuilder()
+                                .body(new ProgressResponseBody(originalResponse.body(), progressListener))
+                                .build();
+                    }
+                })
+                .addInterceptor(logging)
+                .build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(UrlConst.URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .client(httpClient)
+                .build();
+        return retrofit.create(IRetrofitDownload.class);
+    }
+
+    /**
+     * @return 上传文件/图片
+     */
+    public static IRetrofitUpload getUpload(final ProgressResponseBody.ProgressListener progressListener) {
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+                .addNetworkInterceptor(new Interceptor() {
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        Response originalResponse = chain.proceed(chain.request());
+                        return originalResponse.newBuilder()
+                                .body(new ProgressResponseBody(originalResponse.body(), progressListener))
+                                .build();
+                    }
+                })
+                .build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(UrlConst.URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .client(httpClient)
+                .build();
+        return retrofit.create(IRetrofitUpload.class);
+    }
 }
 

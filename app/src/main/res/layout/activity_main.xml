@@ -49,7 +49,7 @@
             android:id="@+id/btn6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test6" />
+            android:text="test_downLoadApk" />
 
         <Button
             android:id="@+id/btn7"
