@@ -58,6 +58,7 @@ public class RetrofitModule {
         return request;
     }
 
+
     /**
      * @return 下载文件
      */
@@ -67,7 +68,8 @@ public class RetrofitModule {
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient httpClient = new OkHttpClient.Builder()
-                .addInterceptor(new Interceptor() {
+                .addInterceptor(logging)
+                .addNetworkInterceptor(new Interceptor() {
                     @Override
                     public Response intercept(Chain chain) throws IOException {
                         Response originalResponse = chain.proceed(chain.request());
@@ -76,7 +78,8 @@ public class RetrofitModule {
                                 .build();
                     }
                 })
-                .addInterceptor(logging)
+                .connectTimeout(15, TimeUnit.SECONDS)//设置请求超时时间
+                .retryOnConnectionFailure(true)//设置出现错误进行重新连接。
                 .build();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(UrlConst.URL)
@@ -88,19 +91,15 @@ public class RetrofitModule {
     }
 
     /**
+     * @return
+     */
+    /**
      * @return 上传文件/图片
      */
-    public static IRetrofitUpload getUpload(final ProgressResponseBody.ProgressListener progressListener) {
+    public static IRetrofitUpload getUpload() {
         OkHttpClient httpClient = new OkHttpClient.Builder()
-                .addNetworkInterceptor(new Interceptor() {
-                    @Override
-                    public Response intercept(Chain chain) throws IOException {
-                        Response originalResponse = chain.proceed(chain.request());
-                        return originalResponse.newBuilder()
-                                .body(new ProgressResponseBody(originalResponse.body(), progressListener))
-                                .build();
-                    }
-                })
+                .connectTimeout(15, TimeUnit.SECONDS)//设置请求超时时间
+                .retryOnConnectionFailure(true)//设置出现错误进行重新连接。
                 .build();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(UrlConst.URL)

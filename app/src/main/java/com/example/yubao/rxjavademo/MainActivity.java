@@ -1,22 +1,31 @@
 package com.example.yubao.rxjavademo;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
+import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.view.View;
 import android.widget.TextView;
 
+import com.example.yubao.rxjavademo.http.ProgressRequestBody;
 import com.example.yubao.rxjavademo.http.ProgressResponseBody;
 import com.example.yubao.rxjavademo.http.RetrofitModule;
 import com.example.yubao.rxjavademo.model.response.WheelDataList;
 import com.example.yubao.rxjavademo.rxjava.RSubscriber;
 import com.example.yubao.rxjavademo.rxjava.Transformer;
 import com.example.yubao.rxjavademo.utils.SubscriberDispose;
+import com.gj.base.lib.utils.GsonUtils;
 import com.gj.base.lib.utils.L;
 import com.gj.base.lib.utils.T;
 
 import org.reactivestreams.Publisher;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -45,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
     }
 
     public void test1() {
@@ -130,7 +140,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-
 
     Disposable test2_Disposable;
     Disposable test2_Disposable2;
@@ -286,12 +295,17 @@ public class MainActivity extends AppCompatActivity {
         RetrofitModule
                 .getDownload(new ProgressResponseBody.ProgressListener() {
                     @Override
-                    public void update(long bytesRead, long contentLength, boolean done) {
-                        L.i("-------下载进度-->" + bytesRead + "/" + contentLength + "/" + done);
-                        showText("-------下载进度-->" + bytesRead + "/" + contentLength + "/" + done);
+                    public void update(final long bytesRead, final long contentLength, final boolean done) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                L.i("-------下载进度-->" + bytesRead + "/" + contentLength + "/" + done + "--线程--" + Thread.currentThread().getName());
+                                notification((int) (bytesRead * 100 / contentLength));
+                            }
+                        });
                     }
                 })
-                .downLoadApk()
+                .downLoadImg()
                 .compose(Transformer.<ResponseBody>ioMain())
                 .subscribeWith(new DefaultSubscriber<ResponseBody>() {
                     @Override
@@ -306,6 +320,34 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onComplete() {
+                    }
+                });
+    }
+
+    public void test_upload() {
+        File file = new File("/storage/emulated/0/DCIM/Screenshots/IMG_20160604_192104.jpg");
+        final ProgressRequestBody requestBody = new ProgressRequestBody(file, new ProgressRequestBody.ProgressListener() {
+            @Override
+            public void onProgress(long hasWrittenLen, long totalLen, boolean hasFinish) {
+                L.i("---->上传进度" + 100 * hasWrittenLen / totalLen + "--thread->" + Thread.currentThread().getName());
+            }
+        });
+        RetrofitModule.getUpload().upload(requestBody)
+                .compose(Transformer.<ResponseBody>ioMain())
+                .subscribeWith(new DefaultSubscriber<ResponseBody>() {
+                    @Override
+                    public void onNext(ResponseBody responseBody) {
+                        L.i("---->onNext" + GsonUtils.getInstance().toJson(responseBody));
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        L.i("---->onError" + t.toString());
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        L.i("---->onComplete");
                     }
                 });
     }
@@ -342,6 +384,7 @@ public class MainActivity extends AppCompatActivity {
                 test_downLoadApk();
                 break;
             case R.id.btn7:
+                test_upload();
                 break;
             case R.id.btn8:
                 break;
@@ -352,6 +395,36 @@ public class MainActivity extends AppCompatActivity {
             default:
                 break;
         }
+    }
+
+    NotificationCompat.Builder builder;
+    NotificationManager manager;
+    private int notiId = 1;
+
+    public void notification(int progress) {
+        if (builder == null) {
+            builder = new NotificationCompat.Builder(this);
+            builder.setSmallIcon(R.mipmap.ic_head_normal)
+                    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_head_normal))
+                    .setAutoCancel(false)//禁止用户点击删除按钮删除
+                    .setOngoing(true)//禁止滑动删除
+                    .setShowWhen(false);//取消右上角的时间显示
+        }
+        builder.setProgress(100, progress, false);
+        if (progress == 100) {
+            builder.setContentTitle("完成");
+            builder.setOngoing(false);//下载完成可以滑动删除
+            Intent intent = new Intent(this, NotificationShowActivity.class);
+            intent.putExtra("extra", "通知的内容");
+            TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+            stackBuilder.addParentStack(NotificationShowActivity.class);
+            stackBuilder.addNextIntent(intent);
+            PendingIntent pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+            builder.setContentIntent(pendingIntent);
+        } else {
+            builder.setContentTitle("下载中..." + progress + "%");
+        }
+        manager.notify(notiId, builder.build());
     }
 
     private StringBuffer old = new StringBuffer();

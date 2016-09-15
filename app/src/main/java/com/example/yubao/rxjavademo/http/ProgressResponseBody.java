@@ -1,6 +1,7 @@
 package com.example.yubao.rxjavademo.http;
 
-import com.gj.base.lib.utils.L;
+import android.os.Handler;
+import android.os.Looper;
 
 import java.io.IOException;
 
@@ -43,10 +44,9 @@ public class ProgressResponseBody extends ResponseBody {
 
     @Override
     public BufferedSource source() {
-//        if (bufferedSource == null) {
-        bufferedSource = Okio.buffer(source(responseBody.source()));
-        L.i("========>1");
-//        }
+        if (bufferedSource == null) {
+            bufferedSource = Okio.buffer(source(responseBody.source()));
+        }
         return bufferedSource;
     }
 
@@ -56,11 +56,15 @@ public class ProgressResponseBody extends ResponseBody {
 
             @Override
             public long read(Buffer sink, long byteCount) throws IOException {
-                L.i("========>2");
-                long bytesRead = super.read(sink, byteCount);
+                final long bytesRead = super.read(sink, byteCount);
                 // read() returns the number of bytes read, or -1 if this source is exhausted.
                 totalBytesRead += bytesRead != -1 ? bytesRead : 0;
-                progressListener.update(totalBytesRead, responseBody.contentLength(), bytesRead == -1);
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressListener.update(totalBytesRead, responseBody.contentLength(), bytesRead == -1);
+                    }
+                });
                 return bytesRead;
             }
         };
