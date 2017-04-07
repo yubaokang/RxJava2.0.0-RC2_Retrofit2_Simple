@@ -22,7 +22,7 @@ public class Transformer {
     public static <T> FlowableTransformer<T, T> ioMain() {
         return new FlowableTransformer<T, T>() {
             @Override
-            public Publisher<? extends T> apply(Flowable<T> flowable) throws Exception {
+            public Publisher<T> apply(Flowable<T> flowable)  {
                 return flowable
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread());
@@ -52,7 +52,7 @@ public class Transformer {
     public static <T> FlowableTransformer<BaseRes<T>, T> retrofit() {
         return new FlowableTransformer<BaseRes<T>, T>() {
             @Override
-            public Publisher<? extends T> apply(Flowable<BaseRes<T>> flowable) throws Exception {
+            public Publisher<T> apply(Flowable<BaseRes<T>> flowable){
                 return flowable
                         .flatMap(new Function<BaseRes<T>, Publisher<T>>() {
                             @Override

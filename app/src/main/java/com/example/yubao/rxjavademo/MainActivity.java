@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.NotificationCompat;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
@@ -24,23 +25,31 @@ import com.gj.base.lib.utils.L;
 import com.gj.base.lib.utils.T;
 
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableEmitter;
 import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.flowables.GroupedFlowable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.functions.Predicate;
+import io.reactivex.subjects.Subject;
 import io.reactivex.subscribers.DefaultSubscriber;
 import io.reactivex.subscribers.ResourceSubscriber;
 import okhttp3.ResponseBody;
@@ -115,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
                         e.onNext("ddAd");
                         e.onComplete();
                     }
-                }, FlowableEmitter.BackpressureMode.DROP)
+                }, BackpressureStrategy.DROP)
                 .compose(Transformer.<String>ioMain())
                 .filter(new Predicate<String>() {
                     @Override
@@ -174,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
     private ResourceSubscriber<String> resourceSubscriber;
 
     public void test3() {
+        String aaaa = "";
         resourceSubscriber = Flowable.
                 create(new FlowableOnSubscribe<String>() {
                     @Override
@@ -185,12 +195,13 @@ public class MainActivity extends AppCompatActivity {
                         e.onNext("ddddd");
                         e.onComplete();
                     }
-                }, FlowableEmitter.BackpressureMode.DROP)
+                }, BackpressureStrategy.DROP)
                 .compose(Transformer.<String>ioMain())
+                .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(new Consumer<String>() {
                     @Override
                     public void accept(String s) throws Exception {
-
+                        L.i("-----test3> accept-" + s);
                     }
                 })
                 .subscribeWith(new ResourceSubscriber<String>() {
@@ -259,9 +270,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void test_zip() {
         Flowable
-                .zip(Flowable.just("11"), Flowable.just("212"), new BiFunction<String, String, String>() {
+                .zip(Flowable.timer(3, TimeUnit.SECONDS), Flowable.just("212"), new BiFunction<Long, String, String>() {
                     @Override
-                    public String apply(String s, String s2) throws Exception {
+                    public String apply(Long s, String s2) throws Exception {
                         L.i("rx_call__zip__" + Thread.currentThread().getName());
                         return s + s2;
                     }
@@ -305,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
                         });
                     }
                 })
-                .downLoadImg()
+                .downLoadApk()
                 .compose(Transformer.<ResponseBody>ioMain())
                 .subscribeWith(new DefaultSubscriber<ResponseBody>() {
                     @Override
@@ -352,13 +363,130 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        SubscriberDispose.builder()
-                .dispose(resourceSubscriber)
-                .dispose(test2_Disposable2)
-                .dispose(retrofit2);
+    void test_isEmpty() {
+        List<String> list = new ArrayList<>();
+        list.add("aaaaa");
+        list.add("");
+        list.add("bbbbb");
+        list.add("");
+        Flowable.fromIterable(list)
+                .takeWhile(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) throws Exception {
+                        L.i("===========>1111" + s);
+                        return !TextUtils.isEmpty(s);
+                    }
+                })
+                .subscribe(new ResourceSubscriber<String>() {
+                    @Override
+                    public void onNext(String s) {
+                        L.i("===========>2222" + s);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        L.i("===========>3333");
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        L.i("===========>4444");
+                    }
+                });
+    }
+
+    void test_9() {
+        Flowable.range(1, 10)
+                .groupBy(new Function<Integer, Integer>() {
+                    @Override
+                    public Integer apply(@NonNull Integer integer) throws Exception {
+                        return integer % 2;
+                    }
+                })
+                .flatMap(new Function<GroupedFlowable<Integer, Integer>, Publisher<Integer>>() {
+                    @Override
+                    public Publisher<Integer> apply(@NonNull GroupedFlowable<Integer, Integer> integerIntegerGroupedFlowable) throws Exception {
+                        return integerIntegerGroupedFlowable.flatMap();
+                    }
+                })
+
+//                .scan(new BiFunction<Integer, Integer, Integer>() {
+//                    @Override
+//                    public Integer apply(@NonNull Integer integer, @NonNull Integer integer2) throws Exception {
+//                        L.i("---------->>>" + integer + "---" + integer2);
+//                        return integer + integer2;
+//                    }
+//                })
+
+
+        Flowable.defer(new Callable<Publisher<String>>() {
+            @Override
+            public Publisher<String> call() throws Exception {
+                return Flowable.just("hahahahah");
+            }
+        }).subscribe(new Consumer<String>() {
+            @Override
+            public void accept(@NonNull String s) throws Exception {
+                L.i("------------>>>>" + s);
+            }
+        });
+
+        Subject.just("aaaaaa")
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(@NonNull String s) throws Exception {
+                        L.i("---------->>>>" + s);
+                    }
+                });
+
+        Flowable<String> flowable = Flowable.create(new FlowableOnSubscribe<String>() {
+            @Override
+            public void subscribe(@NonNull FlowableEmitter<String> e) throws Exception {
+                e.onNext("hahahah");
+                e.onComplete();
+            }
+        }, BackpressureStrategy.DROP);
+        Subscriber<String> s = new Subscriber<String>() {
+            @Override
+            public void onSubscribe(Subscription s) {
+                L.i("--------test_9---1>");
+                s.request(1);
+            }
+
+            @Override
+            public void onNext(String s) {
+                L.i("--------test_9---2>" + s);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                L.i("--------test_9---3>");
+            }
+
+            @Override
+            public void onComplete() {
+                L.i("--------test_9---4>");
+            }
+        };
+        ResourceSubscriber<String> subscriber = new ResourceSubscriber<String>() {
+            @Override
+            public void onNext(String s) {
+                L.i("--------test_9---5>" + s);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                L.i("--------test_9---6>" + "onError");
+            }
+
+            @Override
+            public void onComplete() {
+                L.i("--------test_9---7>" + "onComplete");
+            }
+        };
+        Flowable.just("1", "2", "3").subscribeWith(s);
+//        flowable.subscribe(s);
+//        flowable.subscribe(subscriber);
     }
 
     @OnClick({R.id.btn1, R.id.btn2, R.id.btn3, R.id.btn4, R.id.btn5, R.id.btn6, R.id.btn7, R.id.btn8, R.id.btn9, R.id.btn10})
@@ -387,14 +515,25 @@ public class MainActivity extends AppCompatActivity {
                 test_upload();
                 break;
             case R.id.btn8:
+                test_isEmpty();
                 break;
             case R.id.btn9:
+                test_9();
                 break;
             case R.id.btn10:
                 break;
             default:
                 break;
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        SubscriberDispose.builder()
+                .dispose(resourceSubscriber)
+                .dispose(test2_Disposable2)
+                .dispose(retrofit2);
     }
 
     NotificationCompat.Builder builder;
