@@ -13,66 +13,175 @@
         <TextView
             android:id="@+id/tv_show"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test1" />
+            android:text="test1"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="count down" />
+            android:text="count down"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test3" />
+            android:text="test3"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test_Retrofit2" />
+            android:text="test_Retrofit2"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test_zip" />
+            android:text="test_zip"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test_downLoadApk" />
+            android:text="test_downLoadApk"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn7"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test_upload" />
+            android:text="test_upload"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn8"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test_isEmpty" />
+            android:text="test_isEmpty"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn9"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test9" />
+            android:text="test9"
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn10"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="test10" />
+            android:text="test10"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test11--combinelatest"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn12"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test12---merge"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test13--startWith--先发射一组数据"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn14"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test14--retry重试"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn15"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test15--delay 延迟发射数据  timeout--超时机制"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn16"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test16--intervalRange--间隔"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn17"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test17--FlowableUsing--using"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn18"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test18"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn19"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test19"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn20"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test20"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn21"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test21"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn22"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test22"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn23"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test23"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn24"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="test24"
+            android:textAllCaps="false" />
     </LinearLayout>
 </ScrollView>
