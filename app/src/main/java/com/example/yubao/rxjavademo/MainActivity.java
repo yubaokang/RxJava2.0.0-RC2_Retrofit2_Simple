@@ -39,9 +39,16 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.reactivex.BackpressureStrategy;
+import io.reactivex.Completable;
+import io.reactivex.CompletableEmitter;
+import io.reactivex.CompletableObserver;
+import io.reactivex.CompletableOnSubscribe;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableEmitter;
 import io.reactivex.FlowableOnSubscribe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
@@ -51,6 +58,7 @@ import io.reactivex.functions.Function;
 import io.reactivex.functions.Function3;
 import io.reactivex.functions.Predicate;
 import io.reactivex.internal.operators.flowable.FlowableUsing;
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.schedulers.Timed;
 import io.reactivex.subjects.Subject;
 import io.reactivex.subscribers.DefaultSubscriber;
@@ -76,19 +84,18 @@ public class MainActivity extends AppCompatActivity {
                     public void subscribe(FlowableEmitter<String> e) throws Exception {
                         L.i("rx_call__create__" + Thread.currentThread().getName());
                         e.onNext("aaa");
-                        e.onNext("bAbb");
-                        e.onNext("ccc");
-                        e.onNext("ddAd");
-                        e.onNext("ddd");
+                        e.onNext("bAabb");
+                        e.onNext("ccAaAc");
+                        e.onNext("ddAaAd");
+                        e.onNext("ddAaAd");
                         e.onNext("ddad");
-                        e.onNext("ddAd");
-                        e.onNext("ddAAAAd");
+                        e.onNext("ddaAd");
+                        e.onNext("ddaAAAAAd");
                         e.onNext("ddAaad");
-                        e.onNext("ddAd");
+                        e.onNext("ddaAd");
                         e.onComplete();
                     }
-                }, BackpressureStrategy.DROP)
-                .compose(Transformer.<String>ioMain())
+                }, BackpressureStrategy.DROP).compose(Transformer.<String>ioMain())
                 .filter(new Predicate<String>() {
                     @Override
                     public boolean test(String s) throws Exception {
@@ -103,6 +110,8 @@ public class MainActivity extends AppCompatActivity {
                         return Flowable.just("contains a：" + s);
                     }
                 })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String s) throws Exception {
@@ -326,7 +335,12 @@ public class MainActivity extends AppCompatActivity {
                         return !TextUtils.isEmpty(s);
                     }
                 })
-                .subscribe(new ResourceSubscriber<String>() {
+                .subscribe(new Subscriber<String>() {
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        s.request(Long.MAX_VALUE);
+                    }
+
                     @Override
                     public void onNext(String s) {
                         L.i("===========>2222" + s);
@@ -695,7 +709,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void test18() {
-        Flowable.just(1, 2, 3, 4, 5, 6)
+        Flowable.just(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
                 .all(new Predicate<Integer>() {
                     @Override
                     public boolean test(@NonNull Integer integer) throws Exception {
@@ -720,6 +734,52 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void test19() {
+        Observable.just(1, 2, 3)
+                .subscribe(new Consumer<Integer>() {
+                    @Override
+                    public void accept(@NonNull Integer integer) throws Exception {
+
+                    }
+                });
+        Single.just(3)
+                .subscribe(new SingleObserver<Integer>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(@NonNull Integer integer) {
+
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+
+                    }
+                });
+        Completable.create(new CompletableOnSubscribe() {
+            @Override
+            public void subscribe(@NonNull CompletableEmitter e) throws Exception {
+
+            }
+        }).subscribe(new CompletableObserver() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+        });
+
     }
 
     public void test20() {
